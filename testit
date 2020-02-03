@@ -1,0 +1,1688 @@
+Fdksfkdsaf
+Dfsdkfsld<style>
+</style>
+<div id="dRpt" class="ac w100 <?=$ap?'isAp':''?>">
+	<div id="hRpt">
+		<?if($ansAud) {?>
+			<div class="al"><a href="" id="aUrlRpt">&lt; Back</a></div>
+		<? } elseif(in_array('cmt',$aq)) {?>
+			<div class="fl"><a href="srvy/f3/n4v/id<?=$idSv?>">&lt; Survey</a></div>
+			<div class="fr"><a href="rpt/3xp/r4w/id<?=$idSv?>" download target="_blank">Export</a></div>
+			<div class="fr"><a id="aImport">Import</a></div>
+		<? } else {?>
+			<div class="fl"><a href="menu/rpt/n4v">&lt; Reports</a></div>
+			<div class="fr"><a class="aPrint">Print</a></div>
+		<? }?>
+	</div>
+	<div id="dTitle" class="cb">
+		<h2><?=$peName?><?=$isDev?" ($idPe)":''?><?=strlen($pd)?": $pd":($ulv == 5?": $usRole":'')?></h2>
+		<h3><?=$svName?><?=$isDev?" ($idSv)":''?></h3>
+		<h4><?=$rptTitle?><?=$isDev?" ($id)":''?></h4>
+	</div>
+	<div id="dScore" class="">
+		<?if($trc < ($mrsp?:1) && !in_array($id,[10,11]) && (!$isDev)) {?>
+			<div><?=$tan?'Not enough':'No'?> responses to report.</div>
+			<?
+			exit;
+		} // if tan
+//		dbg($ranA);
+		foreach($ranA as $k=> &$van) {
+			if(strpos($van['slCategory'],'!score') === false || $isDev) {
+				$idSl=$van['zkSrvylineP'];
+				$an=$van['anAnswer'];
+				$aOsf[$idSl]["$an"]++;
+				$ctosf++;
+				if(strpos($van['slCategory'],'!calc') === false) {
+					$aOsfc[$idSl]["$an"]++;
+					$ctosfc++;
+				}
+			}
+		}
+		foreach($aOsf as $k=> $v) {
+			if(isset($rslNew[$k])) {
+				foreach($v as $ka=> $va) {
+					$sc=$gb->getScore($rslNew[$k]['slAnswer'],$ka);
+					if($sc > 50) {
+						$cto+=$va;
+					}
+				}
+			}
+		}
+		foreach($aOsfc as $k=> $v) {
+			if(isset($rslNew[$k])) {
+				foreach($v as $ka=> $va) {
+					$sc=$gb->getScore($rslNew[$k]['slAnswer'],$ka);
+					if($sc > 50) {
+						$ctoc+=$va;
+					}
+				}
+			}
+		}
+//		$ztFvbAll=$cto / count($ranA)?:0;
+		$ztFvbAll=!is_nan($cto / $ctosf)?$cto / $ctosf:0;
+		$ztFvbAllc=!is_nan($ctoc / $ctosfc)?$ctoc / $ctosfc:0;
+		?>
+		<div class="al">
+		</div>
+		<?if($id!= 10 && !$ex) {?>
+			<div><b>Overall Score (Favorable)</b></div>
+			<div class="dBar ma" style="width:505px;">
+				<div class="ac" style="font-size:28px;" title="<?=$ztFvbAllc?>"><?=nf($ztFvbAllc * 100)?>%</div>
+			</div>
+		<? } // if id!=10 ?>
+	</div>
+
+	<?
+	if(false) {
+
+	} elseif($ex) { // exit survey
+		$pyCd=$pe->getPyViaCd(['idCd'=>$id])['rcd'];
+		$rcd=$gb->getCodes(['idPe'=>$pyCd['zkCdPeopleF'],'idSv'=>$idSv,'showUnused'=>false,'rptExit'=>true,])['rcd'];
+		$aZkCode=array_column($rcd,'zkCodeP');
+		$countZkCode=count($aZkCode);
+		$cdK=array_search($id,$aZkCode);
+		$cdKp=$cdK - 1;
+		$cdKn=$idxZkCode=$cdK + 1;
+		$rex=$gb->getAnswers(['idCd'=>$id])['r'];
+		if(!count($rex)) {
+			$rex=$gb->getAnswers(['idCd'=>$rcd[0]['zkCodeP']])['r'];
+		}
+		?>
+		<div>
+			<h2><?=$pyCd['peName']?></h2>
+			<div class="fl"><a href="rpt/x/n4v/id13">&lt; Back</a></div>
+			<div class="fr ml10"><?if($idxZkCode == $countZkCode) {?><span class="cB">Next</span><? } else {?><a href="/rpt/ex/n4v/id<?=$aZkCode[$cdKn]?>">Next</a><? }?></div>
+			<div class="fr"><?=" ($idxZkCode of $countZkCode) "?><?if($cdKp>= 0) {?><a href="/rpt/ex/n4v/id<?=$aZkCode[$cdKp]?>" class="ml10">Prev</a><? } else {?><span class="cB ml10">Prev</span><? }?></div>
+		</div>
+		<table>
+			<thead>
+				<tr>
+					<th class="w3">Question</th>
+					<th class="w7">Answer</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?
+				foreach($rex as $k=> $v) {
+					?>
+					<tr>
+						<td class="al"><?=$v['slQuestion']?></td>
+						<td class="al"><?=$v['anAnswer']?></td>
+					</tr>
+					<?
+				} // fe rex
+				?>
+			</tbody>
+		</table>
+		<?
+		exit;
+	} elseif($ap) { // actionPlan
+		foreach($ranA as $k=> &$v) {
+			$idSl=$v['zkSrvylineP']?:0;
+			$an=$v['anAnswer'];
+			$aTb[$idSl]["$an"]['ans']=$an;
+			$pct=$aTb[$idSl]["$an"]['pct']+=$v['anPct'];
+			$ct=$aTb[$idSl]["$an"]['ct']+=1;
+			if(!isset($aTb[$idSl]["$an"]['sc'])) {
+				$sc=$aTb[$idSl]["$an"]['sc']=$gb->getScore($rslNew[$idSl]['slAnswer'],$an);
+			}
+		}
+		foreach($rslNew as $k=> $v) {
+			if(strpos($v['slCategory'],'score') === false) {
+				continue;
+			}
+			foreach($gb->explodeAns($v['slAnswer']) as $ka=> $va) {
+				if(!isset($aTb[$k]["$va"])) {
+					$aTb[$k]["$va"]=['ans'=>$va,'pct'=>0,'ct'=>0,'sc'=>$gb->getScore($v['slAnswer'],$va),'pcta'=>0];
+				}
+			}
+		}
+		foreach($aTb as $k=> $v) {
+			$aSl=array_values($rslNew[$k]);
+			foreach($v as $ka=> $va) {
+				$idAsl=array_search($va['ans'],array_column($aSl,'anAnswer'));
+				$pct=$aTbT[$k]['pct']+=$va['pct'];
+				$ct=$aTbT[$k]['ct']+=$va['ct'];
+				$pcto=$aTbT[$k]['pcto']=$pct / $ct;
+				$ctf=$aTbT[$k]['ctf']+=($va['sc'] > 50?$va['ct']:0);
+				$pctf=$aTbT[$k]['pctf']=$ctf / $ct * 100;
+			}
+			usort($aTb["$k"],function($a,$b) {
+				return $a['sc'] < $b['sc'];
+			});
+		}
+		?>
+		<div id="dAp" class="al">
+			<?
+			$idPy=isset($_SESSION['jdPy'])?$_SESSION['jdPy']:$_SESSION['idPy'];
+			$u=$apo?"rpt/x/n4v/id11":"rpt/jd{$idPy}/n4v/id11";
+			$u.=strlen($pd)?'/pd'.base64_encode($pd):'';
+			?>
+			<a href="<?=$u?>">&lt; <?=$apo?'Properties':($ap?'Action Plans':'Survey')?></a>
+			<h2>Action Plan</h2>
+			<div class="mb7 cA"><b>Note:</b> This form saves automatically as you update each field.</div>
+			<?
+			$time=gad(time());
+			$rus=$gb->getUsr(['idUs'=>$uid])['r'];
+			$usNmFull=$rus['prNmFirst'].' '.$rus['prNmLast'];
+			$aLb=['acResult'=>'Desired Result','acDtCreateN'=>'Created On','acDtModN'=>'Modified On','acUsCreate'=>'Created By','acUsMod'=>'Modified By','acOkdB'=>'Reviewed','acDtOkdN'=>'Reviewed On','acUsOkd'=>'Reviewed By','acDtClosedN'=>'Closed On','acUsClosed'=>'Closed By'];
+			foreach($rap as $ka=> $va) {
+				$idSl=$va['zkAcSrvylineF']?:$id;
+				?>
+				<div class="tr ml10 fl" data-oe="doLog">
+					<?if($ka) {?>
+						<hr class="cb mt7 mb7">
+					<? } // if ka ?>
+					<div><b>Question:</b> <?=$va['slQuestion']?></div>
+					<?
+					foreach($va as $k=> $v) {
+						$v=$k == 'zkAcSrvylineF'?($v?:$id):$v;
+						$v=$k == 'zkAcPeopleF'?($v?$v:($_SESSION['jdPy']?:$_SESSION['idPy'])):$v;
+						$v=in_array($k,['acDateDueN','acDtCreateN','acDtModN','acDtOkdN','acDtClosedN']) && isset($v)?gad($v):$v;
+						$isTa=in_array($k,['acPlan','acResult']);
+						$isCb=in_array($k,['acOkdB','acClosedB']);
+						$dn=in_array($k,['slQuestion','zkSlSrvyF','zkAcSrvylineF','zkAcPeopleF'])?' dn':'';
+						$ne=in_array($k,['acDtCreateN','acDtModN','acUsCreate','acUsMod','acDtOkdN','acUsOkd','acDtClosedN','acUsClosed'])?' readonly':'';
+						$sv=in_array($k,['zkAcSrvylineF','zkAcPeopleF','acDtCreateN','acDtModN','acUsCreate','acUsMod','acUsOkd','acDtOkdN','acDtClosedN','acUsClosed'])?' sv':'';
+						$isIdAc=in_array($k,['zkActnP'])?' id':'';
+						$isIdSl=in_array($k,['zkAcSrvylineF'])?' idSl':'';
+						$wf=in_array($k,['acResponsibility','acEmail'])?'fW ':'';
+						?>
+						<div>
+							<label class="ib ar <?=($isTa?'at pt2':'')." $dn"?>"><?=$db->isKey($k)?'':(isset($aLb["$k"])?$aLb["$k"]:$db->fldLbl($k))?></label>
+							<?if($isTa) {?>
+								<textarea name="<?=$k?>" class="<?=$wf?><?=$k?>"><?=$v?></textarea>
+							<? } elseif($isCb) {?>
+								<input type="hidden" name="<?=$k?>" value="0">
+								<input type="checkbox" name="<?=$k?>" value="1" <?=$v == 1?'checked':''?>>
+							<? } else {?>
+								<input class="<?=$wf?><?=($db->isKey($k)?('dn sv'.($k == 'acDateDueN'?' datepicker':'')):$dn).$sv.$isIdSl.$isIdAc?>" name="<?=$k?>" type="text" value="<?=$v?>" <?=$ne?> />
+							<? } // if !input ?>
+						</div>
+					<? } // foreach va ?>
+					<?if($isUsDept || strlen($pd)) {?>
+						<input type="text" name="acDept" class="sv" value="<?=strlen($pd)?$pd:$usRole?>">
+					<? }?>
+				</div>
+				<div class="ab">
+					<div class="slA ar">
+						<div><?=$va=$aTbT[$idSl]['ct']?>/<?=$trc?> <?if($isDev) {?><a href="rpt/a0/n4v/id<?=$v['zkSrvylineP']?>" class="aRspRpt"><? }?>Responses<?if($isDev) {?></a><? }?>: <?=nf(($va?:0) / $trc * 100)?>%&nbsp;</div>
+						<div>Favorable: <span class="cE bg4" title="<?=$pctf=$aTbT[$idSl]['pctf']?>">&nbsp;<?=nf($pctf)?>%&nbsp;</span></div>
+						<div>Overall: <span title="<?=$pcto=$aTbT[$idSl]['pcto']?>"><?=nf($pcto)?>%&nbsp;</span></div>
+					</div>
+				</div>
+				<div class="cb"></div>
+			<? } // foreach rap ?>
+			<input type="hidden" id="hUsNmFull" value="<?=$usNmFull?>">
+			<input type="hidden" id="hTime" value="<?=$time?>">
+			<?if($apo) {?>
+				<button id="bRvAll" class="a mt7 lw">Mark all Reviewed</button>
+			<? } else {?>
+				<button id="bUpdAp" class="a mt7 lw">Update Action Plan</button>
+			<? } // if apo?>
+		</div>
+		<?
+		exit;
+	} elseif($ansAud) {
+		$r=$gb->getAnswers(['idSl'=>$id]);
+		if($r['t']) {
+			?>
+			<div class="al">
+				<div><b>Question: </b><?=$r['r'][0]['slQuestion']?></div>
+				<div><b>Answer: </b>
+					<?foreach($r['aAns'] as $k=> $v) {?>
+						<a class="aAns" data-k="<?=$k?>" data-v="<?=$v?>"><?=$v?></a> (<?=($ztRsp=$r['acvAns']["$v"]).'/'.$r['t'].'='.nf($ztRsp / $r['t'] * 100).'%'?>)<?=$k + 1 < count($r['aAns'])?' | ':''?>
+					<? }?>
+				</div>
+				<div id="dRsps"><b>Responses (<?=$r['t']?>):</b></div>
+				<?
+				$i=0;
+				foreach($r['r'] as $k=> $v) {
+					$i++;
+					?>
+					<div class="dRsp" data-v="<?=$v['anAnswer']?>"><?=$i.'. '.$v['anAnswer']?></div>
+				<? }?>
+			</div>
+		<? } else {?>
+			<div>No records found.</div>
+			<?
+		}
+		exit;
+	}
+	$i=0;
+	switch($id) {
+		case 0:
+			?>
+			<div id="dQuestions" class="al">
+				<?
+//				dbg($aTb);
+				foreach($ranA as $k=> &$v) {
+					$idSl=$v['zkSrvylineP']?:0;
+					$an=$v['anAnswer'];
+					$aTb[$idSl]["$an"]['ans']=$an;
+					$pct=$aTb[$idSl]["$an"]['pct']+=$v['anPct'];
+					$ct=$aTb[$idSl]["$an"]['ct']+=1;
+					if(!isset($aTb[$idSl]["$an"]['sc'])) {
+						$sc=$aTb[$idSl]["$an"]['sc']=$gb->getScore($rslNew[$idSl]['slAnswer'],$an);
+					}
+//					$aTb[$idSl]["$an"]['pcta']=$ct / $trc * 100;
+				}
+//				dbg($aTb);
+//				dbg($rslNew);
+				foreach($rslNew as $k=> $v) {
+					if(strpos($v['slCategory'],'score') === false) {
+						continue;
+					}
+					foreach($gb->explodeAns($v['slAnswer']) as $ka=> $va) {
+						if(!isset($aTb[$k]["$va"])) {
+							$aTb[$k]["$va"]=['ans'=>$va,'pct'=>0,'ct'=>0,'sc'=>$gb->getScore($v['slAnswer'],$va),'pcta'=>0];
+						}
+					}
+				}
+//				dbg($aTb);
+				foreach($aTb as $k=> $v) {
+					$aSl=array_values($rslNew[$k]);
+					foreach($v as $ka=> $va) {
+						$idAsl=array_search($va['ans'],array_column($aSl,'anAnswer'));
+						$pct=$aTbT[$k]['pct']+=$va['pct'];
+						$ct=$aTbT[$k]['ct']+=$va['ct'];
+						$pcto=$aTbT[$k]['pcto']=$pct / $ct;
+						$ctf=$aTbT[$k]['ctf']+=($va['sc'] > 50?$va['ct']:0);
+						$pctf=$aTbT[$k]['pctf']=$ctf / $ct * 100;
+					}
+					usort($aTb["$k"],function($a,$b) {
+						return $a['sc'] < $b['sc'];
+					});
+				}
+				foreach($rslNew as $k=> $v) {
+//					dbg($v);
+					if(!strpos(' '.$v['slCategory'],'score')) {
+						continue;
+					}
+					$i++;
+					if(strlen($in=$v['slInstruction'])) {
+						$aA=array_map('trim',explode('|',$an=$v['slAnswer']));
+						array_pop($aA);
+						?>
+						<div class="dI oa">
+							<div class="at fl">
+								<div>Respondent Instruction: </div>
+								<div class="slI"><b><?=$in?></b>
+								</div>
+							</div>
+							<?if(substr($an,0,6) == 'One of') {?>
+								<div class="slA fr">
+									<?
+									$j=0;
+									foreach($aA as $vA) {
+										?>
+										<div><i class="<?=$aAC[$j]?>"></i><?=$vA?></div>
+										<?
+										$j++;
+									}
+									?>
+								</div>
+							<? } // if one of?>
+						</div>
+					<? } // if instruction ?>
+					<div class="dQA">
+						<div class="ib" style="width:80%;">
+							<div class="dQ">#<?=$i?><?=$isDev?" ({$v['zkSrvylineP']})":''?>: <b><?=$v['slQuestion']?></b></div>
+							<div class="dBar ma ib" style="width:100%;">
+								<?
+								$ia=0;
+								$idSl=$v['zkSrvylineP'];
+								$ctAn=count($aTb[$idSl])?:0;
+								$aBgc=$gb->getGradient(['hA'=>'0D2534','hB'=>'39B44A','s'=>$ctAn])['v'];
+								foreach($aTb[$idSl] as $kb=> $vb) {
+									$pcta=$vb['ct'] / $aTbT[$idSl]['ct'];
+									?>
+									<span class="ib" style="width:<?=$pcta * 100?>%;background-color:<?=$aBgc[$ctAn - 1 - $ia++]?>;"></span>
+								<? }?>
+								<div class="cb">
+									<?
+									$ia=0;
+									foreach($aTb[$idSl] as $kb=> $vb) {
+										$pctAn=$vb['ct'] / $aTbT[$idSl]['ct'];
+										$sw=++$ia < $ctAn?'width:'.(100 / $ctAn).'%;':'';
+										?>
+										<div class="ib nw" style="<?=$sw?>" title="<?=$pctAn?>"><i class="bg<?=$ctAn - $ia + 1?>"></i><?=$pctAn > 0?nf($pctAn * 100):'0.00'?>% (<?=$vb['ct']?>)</div>
+									<? }?>
+								</div>
+							</div>
+						</div>
+						<div class="fr ab">
+							<div class="slA ar">
+								<div><?=$va=$aTbT[$idSl]['ct']?>/<?=$trc?> <?if($isDev) {?><a href="rpt/a0/n4v/id<?=$v['zkSrvylineP']?>" class="aRspRpt"><? }?>Responses<?if($isDev) {?></a><? }?>: <?=nf(($va?:0) / $trc * 100)?>%&nbsp;</div>
+								<div>Favorable: <span class="cE" title="<?=$pctf=$aTbT[$idSl]['pctf']?>" style="background-color: <?=$aBgc[$ctAn - 1]?>;">&nbsp;<?=nf($pctf)?>%&nbsp;</span></div>
+								<div>Overall: <span title="<?=$pcto=$aTbT[$idSl]['pcto']?>"><?=nf($pcto)?>%&nbsp;</span></div>
+							</div>
+						</div>
+					</div>
+				<? } // fe rsl ?>
+			</div>
+			<?
+			break;
+		case 1:
+			?>
+			<?
+			if($idPy) { // is py
+				$aPy[]=$idPy;
+			} elseif(isset($_SESSION['rptViewByRegion'])) { // is rg
+				$aPy=$gb->getRgPys(['rgn'=>$_SESSION['rptViewByRegion'],'idPe'=>$idPe]);
+			} else { // is all
+				$aPy=array_column($gb->getUsPys(['idUs'=>$idUs]),'zkPeopleP');
+			}
+//			dbg($_SESSION);
+			$rgn=$_SESSION['rptViewByRegion'];
+//			$rgn='Aaron Smith';
+			$rhsa=$gb->getHist(['idSv'=>$idSv,'idUs'=>$idUs,'idPy'=>$idPy,'rgn'=>$rgn,'rpt'=>1,]);
+			$rhh=$rhsa['aHh'];
+			$rhs=$rhsa['aHs'];
+			unset($rhsa);
+			foreach($rhs as $k=> $v) {
+				if(!count($v)) {
+					unset($rhs["$k"]);
+					unset($rhh[array_search($k,$rhh)]);
+				}
+			}
+			foreach($ranA as $k=> &$v) {
+				$idSl=$v['zkSrvylineP'];
+				$ans=$v['anAnswer'];
+				$ct=$aTb[$idSl]["$ans"]['ct']++;
+				if(strpos($v['slCategory'],'!calc') === false) {
+					$ctc=$aTb[$idSl]["$ans"]['ctc']++;
+				}
+			}
+//			dbg($aTb);
+			foreach($aTb as $k=> $v) {
+				$slAnswer=$rslNew[$k]['slAnswer'];
+				foreach($v as $ka=> $va) {
+					$sc=$gb->getScore($slAnswer,$ka);
+					$aTbA[$k]['ct']+=$va['ct'];
+					if($sc > 50) {
+						$aTbA[$k]['ctf']+=$va['ct'];
+					} else {
+						unset($aTb[$k]["$ka"]);
+					}
+					if(strpos($rslNew[$k]['slCategory'],'!calc') === false) {
+						$aTbA[$k]['ctc']+=$va['ctc'];
+						if($sc > 50) {
+							$aTbA[$k]['ctfc']+=$va['ctc'];
+						}
+					}
+				}
+			}
+			?>
+			<table class="al">
+				<thead>
+					<tr>
+						<th>Question</th>
+						<?
+						if(count($rhs)) {
+							foreach($rhh as $k=> $v) {
+								?>
+								<th class="ar"><?=$v?></th>
+								<?
+							}
+						} else {
+							?>
+							<th class="ar">Prev. Survey</th>
+						<? } // if count(rhs) ?>
+						<th class="ar">Curr. Survey</th>
+						<th class="ar">Change</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?
+					foreach($rslNew as $k=> $v) {
+						if(!strpos(' '.$v['slCategory'],'score')) {
+							continue;
+						}
+						if(strpos(' '.$v['slCategory'],'demo')) {
+							continue;
+						}
+						$i++;
+						$ctf=$aTbA[$k]['ctf'];
+						$ctfc=$aTbA[$k]['ctfc'];
+						$ct=$aTbA[$k]['ct'];
+						$ctc=$aTbA[$k]['ctc'];
+						$sc=$ctfc / $ctc * 100;
+						$scd=$sc > 0?nf($sc).'%':'';
+						?>
+						<tr>
+							<td>#<?=$i?>: <?=$v['slQuestion']?><?=$isDev?" ({$v['zkSrvylineP']})":''?></td>
+							<?
+							if(count($rhs)) {
+								foreach($rhh as $ka=> $va) {
+									$schs=0;
+									foreach($rhs["$va"] as $kb=> $vb) {
+										if($vb['zkHsSrvylineF'] == $k) {
+											$schs=$rhs["$va"][$kb]['sc'] * 100;
+											break;
+										}
+									}
+									?>
+									<td class="ar"><?=$schs?nf($schs).'%':''?></td>
+									<?
+								}
+							} else {
+								$schs=0;
+								?>
+								<td class="ar"></td>
+							<? } // if count(rhs) ?>
+							<td class="ar" title="<?=$sc?:''?>"><?=$scd?></td>
+							<td class="ar"><?=$schs!= '-' && $sc > 0?nf($sc - $schs).'%':''?></td>
+						</tr>
+					<? } // fe rsl ?>
+
+				</tbody>
+			</table>
+			<?
+			break;
+		case 2:
+			?>
+			<?
+			foreach($ranA as $k=> &$v) {
+				$zkCode=$v['zkAnCodeF'];
+				$aCu[$zkCode]=1;
+			}
+			foreach($rcd as $k=> $v) {
+				$zkCode=$v['zkCodeP'];
+				$cu=isset($aCu[$zkCode])?1:0;
+				// property
+				$py=$v['peName'];
+				$aTbPy["$py"]['asc']++;
+				$aTbPy["$py"]['ct']+=$cu;
+				// region
+				$aRg=explode(',',$v['peAccess']);
+				array_walk($aRg,'trim');
+				foreach($aRg as $ka=> $va) {
+					if(strlen(trim($va)) > 0) {
+						$va=trim($va);
+						$aTbRg["$va"]['asc']++;
+						$aTbRg["$va"]['ct']+=$cu;
+					}
+				}
+				$aTbT['asc']++;
+				$aTbT['ct']+=$cu;
+			}
+			?>
+			<table class="al">
+				<thead>
+					<tr>
+						<th>Property</th>
+						<th class="ar">Associates</th>
+						<th class="ar">Responses</th>
+						<th class="ar">Participation</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?foreach($aTbPy as $k=> $v) {?>
+						<tr>
+							<td><?=$k?></td>
+							<td class="ar"><?=$asc=$v['asc']?></td>
+							<td class="ar"><?=$ct=$v['ct']?></td>
+							<td class="ar"><?=round($ct / $asc,3) * 100?>%</td>
+						</tr>
+					<? } // fe $aTbPy ?>
+					<tr>
+						<th>Region</th>
+						<th class="ar">Associates</th>
+						<th class="ar">Responses</th>
+						<th class="ar">Participation</th>
+					</tr>
+					<?
+					foreach($aTbRg as $k=> $v) {
+						if(strlen(trim($k)) == 0) {
+							continue;
+						}
+						?>
+						<tr>
+							<td><?=$k?></td>
+							<td class="ar"><?=$asc=$v['asc']?></td>
+							<td class="ar"><?=$ct=$v['ct']?></td>
+							<td class="ar"><?=round($ct / $asc,3) * 100?>%</td>
+						</tr>
+					<? } // fe $aTbRg?>
+					<tr>
+						<th>Company</th>
+						<th class="ar">Associates</th>
+						<th class="ar">Responses</th>
+						<th class="ar">Participation</th>
+					</tr>
+					<tr>
+						<td></td>
+						<td class="ar"><?=$asc=$aTbT['asc']?></td>
+						<td class="ar"><?=$ct=$aTbT['ct']?></td>
+						<td class="ar"><?=round($ct / $asc,3) * 100?>%</td>
+					</tr>
+				</tbody>
+			</table>
+			<?
+			break;
+		case 3:
+			?>
+			<?
+			if($idPy) { // is py
+				$aPy[]=$idPy;
+			} elseif(isset($_SESSION['rptViewByRegion'])) { // is rg
+				$aPy=$gb->getRgPys(['rgn'=>$_SESSION['rptViewByRegion'],'idPe'=>$idPe]);
+			} else { // is all
+				$aPy=array_column($gb->getUsPys(['idUs'=>$idUs]),'zkPeopleP');
+			}
+			$rhsa=$gb->getHist(['idSv'=>$idSv,'idUs'=>$idUs,'idPy'=>$idPy,'rgn'=>$_SESSION['rptViewByRegion'],'rpt'=>3,]);
+			$rhh=$rhsa['aHh'];
+			$rhs=$rhsa['aHs'];
+//			dbg($rhh);
+//			dbg($rhs);
+			unset($rhsa);
+			foreach($rhs as $k=> $v) {
+				if(!count($v)) {
+					unset($rhs["$k"]);
+					unset($rhh[array_search($k,$rhh)]);
+				}
+			}
+			foreach($ranA as $k=> &$v) {
+				if(!$v['zkPeopleP']) {
+					continue;
+				}
+				$pct=$aTb[$v['zkPeopleP']]['pct']+=$v['anPct'];
+				$ct=($aTb[$v['zkPeopleP']]['ct']++);
+				$ctf=$aTb[$v['zkPeopleP']]['ctf']+=($v['anPct'] > 50?1:0);
+				if(strpos($v['slCategory'],'!calc') === false) {
+					$ctc=($aTb[$v['zkPeopleP']]['ctc']++);
+					$ctfc=$aTb[$v['zkPeopleP']]['ctfc']+=($v['anPct'] > 50?1:0);
+				}
+				$aTb[$v['zkPeopleP']]['slOrderN']=$v['slOrderN'];
+			}
+			foreach($aTb as $k=> $v) {
+				$aTb[$k]['idPe']=$k;
+				$aTb[$k]['pctAll']=$v['pct'] / $v['ct'];
+//				$aTb[$k]['pctAllF']=$v['ctf'] / $v['ct'] * 100;
+				$aTb[$k]['pctAllF']=$v['ctfc'] / $v['ctc'] * 100;
+			}
+			?>
+			<table class="al">
+				<thead>
+					<tr>
+						<th>Property</th>
+						<?
+						if(count($rhs)) {
+							foreach($rhh as $k=> $v) {
+								?>
+								<th class="ar"><?=$v?></th>
+								<?
+							}
+						} else {
+							?>
+							<th class="ar">Prev. Survey</th>
+						<? } // if count(rhs) ?>
+						<th class="ar">Curr. Survey</th>
+						<th class="ar">Change</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?
+					foreach($rpy as $k=> $v) {
+						if(!isset($aTb[$v['zkPeopleP']])) {
+							continue;
+						}
+						$i++;
+						$sc=$aTb[$v['zkPeopleP']]['pctAllF'];
+						$scd=$sc > 0?nf($sc).'%':'';
+						?>
+						<tr>
+							<td><?=$v['peName']?><?=$isDev?" ({$v['zkPeopleP']})":''?></td>
+							<?
+							if(count($rhs)) {
+								foreach($rhh as $ka=> $va) {
+									$schs=0;
+									foreach($rhs["$va"] as $kb=> $vb) {
+										if($vb['zkHsPeopleF'] == $v['zkPeopleP']) {
+											$schs=$rhs["$va"][$kb]['sc'] * 100;
+											break;
+										}
+									}
+									?>
+									<td class="ar"><?=$schs?nf($schs).'%':''?></td>
+									<?
+								}
+							} else {
+								$schs=0;
+								?>
+								<td class="ar"></td>
+							<? } // if count(rhs) ?>
+							<td class="ar"><?=nf($sc)?>%</td>
+							<td class="ar"><?=$schs!= '-' && $sc?nf($sc - $schs).'%':''?></td>
+						</tr>
+					<? } // fe rpy ?>
+				</tbody>
+			</table>
+			<?
+			break;
+		case 4:
+			?>
+			<div class="al">
+				<?
+				foreach($ranA as $k=> &$v) {
+					$pct=$aTb[$v['zkSrvylineP']][$v['zkPeopleP']]['pct']+=$v['anPct'];
+					$ct=($aTb[$v['zkSrvylineP']][$v['zkPeopleP']]['ct']++);
+					$ctf=$aTb[$v['zkSrvylineP']][$v['zkPeopleP']]['ctf']+=($v['anPct'] > 50?1:0);
+					$aTb[$v['zkSrvylineP']][$v['zkPeopleP']]['slOrderN']=$v['slOrderN'];
+				}
+				foreach($aTb as $k=> $v) {
+					foreach($v as $ka=> $va) {
+						$peName=$aTb[$k][$ka]['peName']=$gb->getPe(['idPe'=>$ka])['r']['peName'];
+						$aTb[$k][$ka]['idPe']=$ka;
+						$aTb[$k][$ka]['pctAll']=$va['pct'] / $va['ct'];
+						$aTb[$k][$ka]['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+
+						$pct=$aTbT[$peName]['pct']+=$va['pct'];
+						$ct=$aTbT[$peName]['ct']+=$va['ct'];
+						$aTbT[$peName]['ctf']+=$va['ctf'];
+						$aTbT[$peName]['pctAll']=$pct / $ct;
+					}
+					usort($aTb[$k],function($a,$b) {
+						return $a['peName'] <=> $b['peName'];
+					});
+				}
+				ksort($aTbT);
+				?>
+				<table class="al dBar">
+					<?
+					foreach($aTbT as $k=> $v) {
+						$pct=$pctf=$v['pctAllF']=$v['ctf'] / $v['ct'] * 100;
+						$pctd=nf($pct);
+						?>
+						<tr>
+							<td><?=$k?><?=$isDev?" (ctf: {$v['ctf']} / ct: {$v['ct']} = pctAllF: $pctd)":''?></td>
+							<td class="al" style="width:50%"><i style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>"></i></td>
+							<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+						</tr>
+					<? } // fe rpy ?>
+				</table>
+				<div class="dI" style="margin:28px 0 0 0;"> </div>
+				<?
+				foreach($rsl as $k=> $v) {
+					if(strpos($v['slCategory'],'score') === false) {
+						continue;
+					}
+					if(strpos($v['slCategory'],'demo')!== false) {
+						continue;
+					}
+					$i++;
+					?>
+					<div class="al dI"><?=$isDev?"({$v['zkSrvylineP']}) ":''?><b>Question #<?=$i?>: </b><?=$v['slQuestion']?></div>
+
+					<table class="al dBar">
+						<?
+						foreach($aTb[$v['zkSrvylineP']] as $ka=> $va) {
+//							$ct=round($va['ct'] / $tqc,0);
+							$ct=$va['ct'];
+							$pct=$va['pctAllF'];
+							$pctd=nf($pct);
+							$bc=$ct>= $srm?"background-color:{$aBgcH[(int)$pct - 1]}":'';
+							?>
+							<tr>
+								<td><?=$va['peName']?><?=$isDev?" ({$va['idPe']}) ct:$ct; srm:$srm":''?></td>
+								<td class="al" style="width:50%"><i class="cB nw" style="width:<?=$pct?>%;<?=$bc?>"><?=$ct>= $srm?'':'Not enough responses to report'?></i></td>
+								<td class="ar" style="width:50px;"><?=$pct > 0 && $ct>= $srm?(nf($pct).'%'):''?></td>
+							</tr>
+						<? } // fe rpy ?>
+					</table>
+				<? } // fe rsl ?>
+			</div>
+			<?
+			break;
+		case 5:
+			?>
+			<?
+			foreach($ranA as $k=> &$v) {
+				$aPeAccess=explode(',',str_replace(', ',',',$aPe[$v['zkPeopleP']]['peAccess']));
+				if(strpos($v['slCategory'],'!calc') === false) {
+					foreach($aPeAccess as $ka=> $va) {
+						// totals
+						$pct=$aTbT["$va"]['pct']+=$v['anPct'];
+						$ct=$aTbT["$va"]['ct']++;
+						$aTbT["$va"]['pctAll']=$pct / $ct;
+						$ctf=$aTbT["$va"]['ctf']+=($v['anPct'] > 50?1:0);
+//					$aTbT["$va"]['pctAllF']=$ctf / $ct * 100;
+						// regions
+						$pct=$aTb[$v['zkSrvylineP']]["$va"]['pct']+=$v['anPct'];
+						$ct=$aTb[$v['zkSrvylineP']]["$va"]['ct']++;
+						$aTb[$v['zkSrvylineP']]["$va"]['pctAll']=$pct / $ct;
+						$ctf=$aTb[$v['zkSrvylineP']]["$va"]['ctf']+=($v['anPct'] > 50?1:0);
+//					$aTb[$v['zkSrvylineP']]["$va"]['pctAllF']=$ctf / $ct * 100;
+					}
+				}
+			}
+			ksort($aTbT);
+			array_walk($aTb,'ksort');
+			?>
+			<div class="dQ"><b><?=$rptTitle?> (Summary)</b></div>
+			<table class="al dBar">
+				<?
+				foreach($aTbT as $k=> $v) {
+					if(!strlen($k)) {
+						continue;
+					}
+					$pct=$pctf=$v['pctAllF']=$v['ctf'] / $v['ct'] * 100;
+					$pctd=nf($pct);
+					?>
+					<tr>
+						<td><?=$k?><?=$isDev?" (ctf: {$v['ctf']} / ct: {$v['ct']} = pctAllF: $pctd)":''?></td>
+						<td class="al" style="width:50%"><i  style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>;"></i></td>
+						<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+					</tr>
+				<? } // fe rpy ?>
+			</table>
+			<div class="dI" style="margin:28px 0 0 0;"> </div>
+			<?
+			foreach($rsl as $k=> $v) {
+				if(!strpos(' '.$v['slCategory'],'score')) {
+					continue;
+				}
+				$i++;
+				?>
+				<div class="al dI" style="border:none;">#<?=$i?><?=$isDev?" ({$v['zkSrvylineP']})":''?>: <b><?=$v['slQuestion']?></b></div>
+				<table class="al dBar">
+					<?
+					foreach($aTb[$v['zkSrvylineP']] as $kb=> $vb) {
+						$pct=$pctf=$vb['pctAllF']=$vb['ctf'] / $vb['ct'] * 100;
+						$pctd=nf($pct);
+						?>
+						<tr>
+							<td><?=$kb?><?=$isDev?" (ctf: {$vb['ctf']} / ct: {$vb['ct']} = pctAllF: $pctd)":''?></td>
+							<td class="al" style="width:50%"><i style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>;"></i></td>
+							<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+						</tr>
+					<? } // fe rpy ?>
+				</table>
+			<? } // fe rsl ?>
+			<?
+			break;
+		case 6:
+			?>
+			<?
+			$i=0;
+			foreach($ranA as $k=> &$v) {
+				if($v['zkSrvylineP']) {
+					if(strpos($v['slCategory'],'!calc') === false) {
+						$pct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['pct']+=$v['anPct'];
+						$ct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['ct']++;
+						$ctf=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['ctf']+=($v['anPct'] > 50?1:0);
+						$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['slOrderN']=$v['slOrderN'];
+					}
+				}
+			}
+			foreach($aTbA as $k=> $v) {
+				foreach($v as $ka=> $va) {
+					if(isset($aBrand[$ka])) {
+						$peBrand=$aBrand[$ka];
+					} else {
+						$peBrand=trim($gb->getPe(['idPe'=>$ka])['r']['peBrand']);
+						$aBrand[$ka]=$peBrand;
+					}
+					// totals
+					$pct=$aTbT["$peBrand"]['pct']+=$va['pct'];
+					$ct=$aTbT["$peBrand"]['ct']+=$va['ct'];
+					$aTbT["$peBrand"]['pctAll']=$pct / $ct;
+					$aTbT["$peBrand"]['ctf']+=$va['ctf'];
+//					$aTbT["$peBrand"]['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+					// brands
+					$pct=$aTb[$k]["$peBrand"]['pct']+=$va['pct'];
+					$ct=$aTb[$k]["$peBrand"]['ct']+=$va['ct'];
+					$aTb[$k]["$peBrand"]['ctf']+=$va['ctf'];
+					$aTb[$k]["$peBrand"]['pctAll']=$pct / $ct;
+//					$aTb[$k]["$peBrand"]['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+				}
+				ksort($aTb[$k]);
+			}
+			ksort($aTbT);
+			?>
+			<div class="dQ"><b><?=$rptTitle?> (Summary)</b></div>
+			<table class="al dBar">
+				<?
+				foreach($aTbT as $k=> $v) {
+					if($k == 's') {
+//						continue; // todo: fix underlying issue
+					}
+					$pct=$pctf=$v['pctAllF']=$v['ctf'] / $v['ct'] * 100;
+					$pctd=nf($pct);
+					?>
+					<tr>
+						<td><?=$k?><?=$isDev?" (ctf: {$v['ctf']} / ct: {$v['ct']} = pctAllF: $pctd)":''?></td>
+						<td class="al" style="width:50%"><i style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>"></i></td>
+						<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+					</tr>
+				<? } // fe rpy ?>
+			</table>
+			<div class="dI" style="margin:28px 0 0 0;"> </div>
+			<?
+			foreach($rsl as $k=> $v) {
+				if(!strpos(' '.$v['slCategory'],'score')) {
+					continue;
+				}
+				$i++;
+				?>
+				<div class="al dI" style="border:none;"><b>Question #<?=$i?>: </b><?=$v['slQuestion']?></div>
+				<table class="al dBar">
+					<?
+					foreach($aTb[$v['zkSrvylineP']] as $ka=> $va) {
+						$pct=$pctf=$va['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+						$pctd=nf($pct);
+						?>
+						<tr>
+							<td><?=$ka?><?=$isDev?" (ctf: {$va['ctf']} / ct: {$va['ct']} = pctAllF: $pctd)":''?></td>
+							<td class="al" style="width:50%"><i style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>;"></i></td>
+							<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+						</tr>
+					<? } // fe aBr ?>
+				</table>
+			<? } // fe rsl ?>
+			<?
+			break;
+		case 7:
+			?>
+			<?
+			$i=0;
+			foreach($ranA as $k=> &$v) {
+				if(strpos($v['slCategory'],'!calc') === false) {
+					$peType=$aPe[$v['zkPeopleP']]['peType'];
+					$pct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]["$peType"]['pct']+=$v['anPct'];
+					$ct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]["$peType"]['ct']++;
+					$ctf=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]["$peType"]['ctf']+=$v['anPct'] > 50?1:0;
+					$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]["$peType"]['slOrderN']=$v['slOrderN'];
+				}
+			}
+			foreach($aTbA as $k=> $v) {
+				foreach($v as $ka=> $va) {
+					foreach($va as $kb=> $vb) {
+						if(!strlen(trim($kb))) {
+							continue;
+						}
+						$peType=$kb;
+						// totals
+						$pct=$aTbT["$peType"]['pct']+=$vb['pct'];
+						$ct=$aTbT["$peType"]['ct']+=$vb['ct'];
+						$aTbT["$peType"]['ctf']+=$vb['ctf'];
+						$aTbT["$peType"]['pctAll']=$pct / $ct;
+//						$aTbT["$peType"]['pctAllF']=$vb['ctf'] / $vb['ct'] * 100;
+						// types
+						$pct=$aTb[$k]["$peType"]['pct']+=$vb['pct'];
+						$ct=$aTb[$k]["$peType"]['ct']+=$vb['ct'];
+						$aTb[$k]["$peType"]['ctf']+=$vb['ctf'];
+						$aTb[$k]["$peType"]['pctAll']=$pct / $ct;
+//						$aTb[$k]["$peType"]['pctAllF']=$vb['ctf'] / $vb['ct'] * 100;
+					}
+				}
+				ksort($aTb[$k]);
+			}
+			ksort($aTbT);
+			?>
+			<table class="al dBar">
+				<?
+				foreach($aTbT as $k=> $v) {
+					$pct=$pctf=$v['pctAllF']=$v['ctf'] / $v['ct'] * 100;
+					$pctd=nf($pct);
+					?>
+					<tr>
+						<td><?=$k?><?=$isDev?" (ctf: {$v['ctf']} / ct: {$v['ct']} = pctAllF: $pctd)":''?></td>
+						<td class="al" style="width:50%"><i style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>"></i></td>
+						<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+					</tr>
+				<? } // fe rpy ?>
+			</table>
+			<div class="dI" style="margin:28px 0 0 0;"> </div>
+			<?
+			foreach($rsl as $k=> $v) {
+				if(!strpos(' '.$v['slCategory'],'score')) {
+					continue;
+				}
+				if(strpos(' '.$v['slCategory'],'demo')) {
+					continue;
+				}
+				$pctSum=$tPct=$j=0;
+				$i++;
+				?>
+				<div class="al dI" style="border:none;">#<?=$i?><?=$isDev?" ({$v['zkSrvylineP']})":''?>: <b><?=$v['slQuestion']?></b></div>
+				<table class="al dBar">
+					<?
+					foreach($aTb[$v['zkSrvylineP']] as $ka=> $va) {
+						$pct=$pctf=$va['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+						$pctd=nf($pct);
+						?>
+						<tr>
+							<td><?=$ka?><?=$isDev?" (ctf: {$va['ctf']} / ct: {$va['ct']} = pctAllF: $pctd)":''?></td>
+							<td class="al" style="width:50%"><i style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>"></i></td>
+							<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+						</tr>
+						<?
+						$pctSum+=$pct;
+						$tPct+=$pct;
+						$j++;
+					} // fe $aTb
+					$pct=$pctSum / $j;
+					?>
+					<tr>
+						<td><b>Average</b></td>
+						<td class="al" style="width:50%"></td>
+						<td class="ar" style="width:50px;"><b><?=nf($tPct / $j)?>%</b></td>
+					</tr>
+				</table>
+			<? } // fe rsl ?>
+			<?
+			break;
+		case 8:
+			?>
+			<?
+			$i=0;
+			foreach($ranA as $k=> &$v) {
+				if(!$v['zkSrvylineP']) {
+					continue;
+				}
+				if(strpos($v['slCategory'],'!calc') === false) {
+					$pct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['pct']+=$v['anPct'];
+					$ct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['ct']++;
+					$ct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['ctf']+=$v['anPct'] > 50?1:0;
+					$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['slOrderN']=$v['slOrderN'];
+				}
+			}
+			foreach($aTbA as $k=> $v) {
+				foreach($v as $ka=> $va) {
+					if(isset($aSlvl[$ka])) {
+						$peSlvl=$aSlvl[$ka];
+					} else {
+						$slvl=trim($gb->getPe(['idPe'=>$ka])['r']['peSvcLvl']);
+						$peSlvl=strlen(trim($slvl))?$slvl:'None Specified';
+						$aSlvl[$ka]=$peSlvl;
+					}
+					// totals
+					$pct=$aTbT["$peSlvl"]['pct']+=$va['pct'];
+					$ct=$aTbT["$peSlvl"]['ct']+=$va['ct'];
+					$aTbT["$peSlvl"]['ctf']+=$va['ctf'];
+					$aTbT["$peSlvl"]['pctAll']=$pct / $ct;
+//					$aTbT["$peSlvl"]['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+					// service levels
+					$pct=$aTb[$k]["$peSlvl"]['pct']+=$va['pct'];
+					$ct=$aTb[$k]["$peSlvl"]['ct']+=$va['ct'];
+					$aTb[$k]["$peSlvl"]['ctf']+=$va['ctf'];
+					$aTb[$k]["$peSlvl"]['pctAll']=$pct / $ct;
+//					$aTb[$k]["$peSlvl"]['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+				}
+				ksort($aTb[$k]);
+			}
+			ksort($aTbT);
+			?>
+			<table class="al dBar">
+				<?
+				foreach($aTbT as $k=> $v) {
+					$pct=$pctf=$v['pctAllF']=$v['ctf'] / $v['ct'] * 100;
+					$pctd=nf($pct);
+					?>
+					<tr>
+						<td><?=$k?><?=$isDev?" (ctf: {$v['ctf']} / ct: {$v['ct']} = pctAllF: $pctd)":''?></td>
+						<td class="al" style="width:50%"><i style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>"></i></td>
+						<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+					</tr>
+				<? } // fe rpy ?>
+			</table>
+			<div class="dI" style="margin:28px 0 0 0;"> </div>
+			<?
+			foreach($rsl as $k=> $v) {
+				if(!strpos(' '.$v['slCategory'],'score')) {
+					continue;
+				}
+				if(strpos(' '.$v['slCategory'],'demo')) {
+					continue;
+				}
+				$pctSum=$tPct=$j=0;
+				$i++;
+				?>
+				<div class="al dI" style="border:none;">#<?=$i?><?=$isDev?" ({$v['zkSrvylineP']})":''?>: <b><?=$v['slQuestion']?></b></div>
+				<table class="al dBar">
+					<?
+					foreach($aTb[$v['zkSrvylineP']] as $ka=> $va) {
+						$pct=$pctf=$va['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+						$pctd=nf($pct);
+						?>
+						<tr>
+							<td><?=$ka?><?=$isDev?" (ctf: {$va['ctf']} / ct: {$va['ct']} = pctAllF: $pctd)":''?></td>
+							<td class="al" style="width:50%"><i style="width:<?=$pct?>%;background-color:<?=$aBgcH[(int)$pct - 1]?>"></i></td>
+							<td class="ar" style="width:50px;" title="<?=$pct?>"><?=nf($pct)?>%</td>
+						</tr>
+						<?
+						$pctSum+=$pct;
+						$tPct+=$pct;
+						$j++;
+					} // fe $aTb
+					$pct=$pctSum / $j;
+					?>
+					<tr>
+						<td><b>Average</b></td>
+						<td class="al" style="width:50%"></td>
+						<td class="ar" style="width:50px;"><b><?=nf($tPct / $j)?>%</b></td>
+					</tr>
+				</table>
+			<? } // fe rsl ?>
+			<?
+			break;
+		case 9:
+			$aIndCat=$gb->getIndCat()['r'];
+			$aIs=strlen($rgn)?['rgn'=>$rgn]:(isset($idPy)?['idPy'=>$idPy]:['idPe'=>$idPe]);
+			$aIs['idSv']=$idSv;
+			$fis=$gb->getIndScore($aIs);
+			$ris=$fis['r'];
+			if(!$fis['tis']) {
+				echo('<i>No matching records.</i>');
+				exit;
+			}
+			$isSum=$inSum=0;
+			?>
+			<table class="al">
+				<thead>
+					<tr>
+						<th class="al">Question Category</th>
+						<th class="ar">Industry (last 12 mo.)</th>
+						<th class="ar">Your Score</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?
+					foreach($ris as $k=> $v) {
+						$isMrsp=$v['anScoreCt'] > $mrsp;
+						if($isMrsp) {
+							$is=$v['anScoreFvblS'] / $v['anScoreCt'];
+							$isSum+=$is;
+							$rin=$gb->getIndScore(['categ'=>$v['slCatOnly']])['r'][0];
+							$in=$rin['anScoreFvblS'] / $rin['anScoreCt'];
+							$inSum+=$in;
+						} else {
+							unset($ris[$k]);
+						}
+						?>
+						<tr>
+							<td><?=$v['slCatOnly']?></td>
+							<td class="ar" title="<?=$isMrsp?$in:''?>"><?=$isMrsp?nf($in * 100).'%':'-'?></td>
+							<td class="ar" title="<?=$isMrsp?$is:''?>"><?=$isMrsp?nf($is * 100).'%':'<i>Not enough responses</i>'?></td>
+						</tr>
+						<?
+					} // fe rpy
+					$isTot=$isSum / count($ris);
+					$inTot=$inSum / count($ris);
+					?>
+					<tr>
+						<th class="al">Compared Average Index</th>
+						<th class="ar" title="<?=$inTot?>"><?=nf($inTot * 100)?>%</th>
+						<th class="ar" title="<?=$isTot?>"><?=nf($isTot * 100)?>%</th>
+					</tr>
+				</tbody>
+			</table>
+			<?
+			break;
+		case 10: // Comments
+			?>
+			<div class="al">
+				<?
+				$zkSrvylineP=$zkPeople=$srmPrev=0;
+				$dept='';
+				if(isset($idPy)) {
+					foreach($rcm as $k=> $v) {
+						$rcm[$k]['dept']=$gb->getCodeDept(['idCd'=>$v['zkAnCodeF']]);
+					} // fe rcm
+				}
+				if($idPy) {
+					$x=array_multisort(array_column($rcm,'dept'),array_column($rcm,'zkSrvylineP'),array_column($rcm,'slOrderN'),$rcm);
+				}
+				if(!$rcm[0]['peDeptCmtB']) {
+					usort($rcm,function($a,$b) {
+						return strcmp($a['zkSrvylineP'],$b['zkSrvylineP']);
+					});
+				}
+				foreach($rcm as $k=> $v) {
+					$j++;
+					if($zkPeople!= $v['zkPeopleP'] && !isset($idPy)) {
+						$zkSrvylineP=0;
+						$i=0;
+						?>
+						<h4 class="al b bge"><?=$v['peName']?></h4>
+						<?
+					} // if new zkPeople
+					$zkPeople=$v['zkPeopleP'];
+					if($dept!= $v['dept'] && $v['peDeptCmtB'] && isset($idPy)) {
+						$dept=$v['dept'];
+						$zkSrvylineP=0;
+						$i=0;
+						?>
+						<h4 class="al b bge"><?=$v['dept']?></h4>
+						<?
+					} // if new dept
+					if($zkSrvylineP!== $v['zkSrvylineP']) {
+						$zkSrvylineP=$v['zkSrvylineP'];
+						$i++;
+						$rcmPe=array_filter($rcm,function($va) use ($zkSrvylineP) {
+							return $va['zkSrvylineP'] == $zkSrvylineP;
+						});
+						$srmB=count($rcmPe)>= $srm;
+//						dbg($rcmPe);
+//						$srmB=1;
+						?>
+						<div class="al dI"><b><?=$isDev?"({$v['zkSrvylineP']}) ":''?>Question #<?=$i?>: </b><?=$v['slQuestion']?></div>
+						<div class="al dBar">
+							<?
+						} // if $isNewQ
+						?>
+						<div class="bbc mbt7 <?=$srmB && $srmPrev?'_dn':''?>"><?=$srmB?(($isDev?"<b>{$v['zkAnCodeF']} ({$v['dept']}): </b>":'').htmlspecialchars(nl2br(trim($v['anAnswer'])))):'<span class="i">Not enough responses to report</span>'?></div>
+						<?if(false) {?>
+						</div>
+						<?
+					} // if false
+					$srmPrev=$srmB;
+				} // fe rcm
+				?>
+			</div>
+			<?
+			break;
+		case 11:
+			?>
+			<?
+			if(($idPy && $jd) || $ulv == 5) {
+				if(gju($aq)) {
+					$_SESSION['jdPy']=$_SESSION['idPy'];
+					unset($_SESSION['idPy']);
+				}
+				foreach($ranA as $k=> &$v) {
+					$idSl=$v['zkSrvylineP'];
+					$ans=$v['anAnswer'];
+					$ct=$aTb[$idSl]["$ans"]['ct']++;
+				}
+				foreach($aTb as $k=> $v) {
+					$slAnswer=$rslNew[$k]['slAnswer'];
+					foreach($v as $ka=> $va) {
+						$sc=$gb->getScore($slAnswer,$ka);
+						$ct=$aTbA[$k]['ct']+=$va['ct'];
+						$rslNew[$k]['ct']=$ct;
+						if($sc > 50) {
+							$ctf=$aTbA[$k]['ctf']+=$va['ct'];
+							$rslNew[$k]['ctf']=$ctf;
+						} else {
+							unset($aTb[$k]["$ka"]);
+						}
+					}
+				}
+				if($ulv!= 5) {
+					?>
+					<a href="/rpt/x/n4v/id11" class="fl cb mb7">&lt; Properties</a>
+				<? } //if ulv!=5 ?>
+				<table class="al cb">
+					<tr>
+						<th class="ac"></th>
+						<th class="ar">Favorable</th>
+						<th class="al">Question</th>
+					</tr>
+					<?
+					usort($rslNew,function($a,$b) {
+						return $a['ctf'] / $a['ct'] <=> $b['ctf'] / $b['ct'];
+					});
+					foreach($rslNew as $k=> $v) {
+						if(!strpos(' '.$v['slCategory'],'score')) {
+							continue;
+						}
+						$idSl=$v['zkSrvylineP'];
+						$pctf=$v['ctf'] / $v['ct'];
+						$pctd=$pctf > 0?nf($pctf * 100).'%':'-';
+						$rActn=$gb->getAp(['idSl'=>$idSl,'idPy'=>$idPy,'usRole'=>$isUsDept || strlen($pd)?$usRole:false])['r'][0];
+						$zkActn=$rActn['zkActnP'];
+						$statusActn=$rActn['acClosedB']?'Closed':($rActn['acOkdB']?'Reviewed':($zkActn?'Open':'Create'));
+						$pde=base64_encode($pd);
+						?>
+						<tr class="zs">
+							<td><a href="/rpt/ap/n4v/id<?=$idSl?><?=strlen($pd)?"/pd$pde":''?>"><?=$statusActn?></a></td>
+							<td class="ar"><?=$pctd?></td>
+							<td><?=($v['slQuestion'])?></td>
+						</tr>
+					<? } // fe rsl?>
+				</table>
+				<?
+			} else {
+				$aPy=$gb->getApPe(['idSv'=>$idSv,'idUs'=>$idUs])['aPy'];
+				$aDept=$gb->getDepts(['idSv'=>$idSv])['aDept'];
+				?>
+				<table id="tAp">
+					<tr>
+						<th>Property</th>
+						<th class="ar">Open</th>
+						<th class="ar">In Review</th>
+						<th class="ar">Closed</th>
+					</tr>
+					<?
+					foreach($aPy as $k=> $v) {
+						$rg=$gb->getRg(['idPe'=>$k])['r'][0]['peAccess'];
+						if(isset($_SESSION['rptViewByRegion']) && strpos($rg,$_SESSION['rptViewByRegion']) === false) {
+							continue;
+						}
+						if(isset($idPy) && $k!= $idPy) {
+							continue;
+						}
+						?>
+						<tr class="zs">
+							<td class="al">
+								<a href="rpt/jd<?=$k?>/n4v/id11"><?=$v['name']?></a><?=$isDev?' ('.$rg.')':''?>
+								<?if($rpi[array_search($k,array_column($rpi,'zkPeopleP'))]['peDeptApB']) {?>
+									<span class="nw fr"><a data-id="<?=$k?>" class="aTogDeptAp">Departments</a></span>
+								<? } // if deptAp ?>
+							</td>
+							<?
+							$vo=$v['open'];
+							if(($_isDev || $uid == 51 || $uid == 39 /* Sylvia Douglin, Crestline */ || $uid == 342 /* Valarie Murray, Crestline > Georgia Tech Hotel */) && $vo) {
+								?>
+								<td class="ar tdu"><a href="rpt/apo/n4v/id<?=$k?>" class="ul"><?=$vo?></a></td>
+							<? } else {?>
+								<td class="ar"><?=$vo?:''?></td>
+							<? }?>
+							<td class="ar"><?=$v['rvwd']?:''?></td>
+							<td class="ar"><?=$v['clsd']?:''?></td>
+						</tr>
+						<?
+						foreach($aDept as $ka=> $va) {
+							$idUd=$gb->getDeptUsr(['idPy'=>$k,'usRole'=>$va]);
+							$aAp=$gb->getApPe(['idPy'=>$k,'idSv'=>$idSv,'usRole'=>$va,])['aPy'][$k];
+							$vae=base64_encode($va);
+//								$vae=$va;
+							?>
+							<tr class="al zs trApDept_<?=$k?> dn">
+								<td style="padding-left:28px"><a href="rpt/jd<?=$k?>/n4v/id11/pd<?=$vae?>"><?=$va?></a> <?//=$gb->gpd(["pd$vae"])?></td>
+								<td class="ar"><?=$aAp['open']?></td>
+								<td class="ar"><?=$aAp['rvwd']?></td>
+								<td class="ar"><?=$aAp['clsd']?></td>
+							</tr>
+						<? } // fe aDept?>
+					<? } // fe aPy	?>
+				</table>
+			<? } // if idPy ?>
+			<?
+			break;
+		case 12:
+			?>
+			<?
+			$gcv=($gb->getVlCore(['idSv'=>$idSv,'idPe'=>$idPe,'idPy'=>$idPy,]));
+			$aCv=$gcv['aCv'];
+			$aSlCv=$gcv['aSlCv'];
+			foreach($ranA as $k=> &$v) {
+				if(!$v['zkSrvylineP'] || !isset($gcv['aSlCv'][$v['zkSrvylineP']])) {
+					continue;
+				}
+				$pct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['pct']+=$v['anPct'];
+				$ct=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['ct']++;
+				$ctf=$aTbA[$v['zkSrvylineP']][$v['zkPeopleP']]['ctf']+=$v['anPct'] > 50?1:0;
+			}
+			foreach($aCv as $k=> $v) {
+				foreach($v as $ka=> $va) {
+					if(array_key_exists($va,$aTbA)) {
+						$aTbB["$k"][$va]=$aTbA[$va];
+					}
+				}
+			}
+//			dbg($aTbB);
+			foreach($aTbB as $k=> $v) {
+				foreach($v as $ka=> $va) {
+					foreach($va as $kb=> $vb) {
+						$aTb["$k"][$ka]['pct']+=$vb['pct'];
+						$aTb["$k"][$ka]['ct']+=$vb['ct'];
+						$aTb["$k"][$ka]['ctf']+=$vb['ctf'];
+						$aTbT["$k"]['pct']+=$vb['pct'];
+						$aTbT["$k"]['ct']+=$vb['ct'];
+						$aTbT["$k"]['ctf']+=$vb['ctf'];
+					}
+				}
+			}
+//			dbg($aTbT);
+			foreach($aTb as $k=> $v) {
+				foreach($v as $ka=> $va) {
+					$aTb["$k"][$ka]['sc']=$va['pct'] / $va['ct'];
+					$aTb["$k"][$ka]['scf']=$va['ctf'] / $va['ct'] * 100;
+				}
+			}
+			foreach($aTbT as $k=> $v) {
+				$aTbT["$k"]['sc']=$v['pct'] / $v['ct'];
+				$aTbT["$k"]['scf']=$v['ctf'] / $v['ct'] * 100;
+			}
+			?>
+			<table id="tCv">
+				<tr>
+					<th class="al">Core Value</th>
+					<th class="ar">Score</th>
+				</tr>
+				<?
+				foreach($aTb as $k=> $v) {
+					$scT=$aTbT["$k"]['pct'] / $aTbT["$k"]['ct'];
+					$scfT=$aTbT["$k"]['scf'];
+					$scdT=nf($scfT);
+					?>
+					<tr class="zs">
+						<td class="al">
+							<div class="b"><?=$k?></div>
+							<ul>
+								<?
+								foreach($v as $ka=> $va) {
+									$sc=$va['scf'];
+									$scd=nf($sc);
+									?>
+									<li><?=$isDev?"($ka) ":''?><?=$rslNew[$ka]['slQuestion']?><span title="<?=$sc?>"><?="($scd%)"?></span></li>
+								<? }?>
+							</ul>
+						</td>
+						<td class="b ar am"><span title="<?=$scfT?>"><?=$scdT?>%</span></td>
+					</tr>
+				<? }?>
+			</table>
+			<?
+			break;
+		case 13:
+			?>
+			<?($rsv=$gb->getCodes(['idSv'=>$idSv])['rcd']);?>
+			<?
+			$aUsPePys=$gb->getUsPePys(['idUs'=>$uid]);
+			$rvbr=$_SESSION['rptViewByRegion'];
+			foreach($rsv as $k=> $v) {
+				if(!isset($aSvPy[$v['zkCdPeopleF']])) {
+					if(($idPy && $idPy!= $v['zkCdPeopleF']) || (strlen($rvbr) && !in_array($rvbr,$pe->getRgn(['idPy'=>$v['zkCdPeopleF']])) || !$gb->getCodes(['idPe'=>$v['zkCdPeopleF'],'idSv'=>$idSv,'showUnused'=>false,'rptExit'=>true])['tcd'])) {
+						continue;
+					}
+					$aSvPy[$v['zkCdPeopleF']]=$gb->qc(['e'=>'prop','idPy'=>$v['zkCdPeopleF'],'idSv'=>$idSv])['qc'];
+				}
+			}
+			if(!count($aSvPy)) {
+				echo 'No responses to report';
+				exit;
+			}
+			?>
+			<table>
+				<tbody>
+					<?
+					foreach($aSvPy as $k=> $v) {
+						if(!in_array($k,array_column($aUsPePys,'zkPeopleP'))) {
+							continue;
+						}
+						$rpe=$pe->getPeo(['idPe'=>$k]);
+						$peName=$rpe['rpe']['peName'];
+						if(!strlen($peName)) {
+							continue;
+						}
+						$rcd=$gb->getCodes(['idPe'=>$k,'showUnused'=>false])['rcd'];
+						?>
+						<tr class="al">
+							<th class="al" colspan="2">
+								<a href="/rpt/ex/n4v/id<?=$rcd[0]['zkCodeP']?>" id="_aPeNm" data-id="<?=$k?>"><?=$peName?></a><?=$isDev?'':''?>
+							</th>
+						</tr>
+						<?
+//						foreach($rcd as $kcd=> $vcd) {
+						?>
+			<!--							<tr class="peNm//<?//=$k?> dn">
+								<td></td>
+								<td class="al"><a href="/rpt/ex/n4v/id//<?//=$vcd['zkCodeP']?>"><?//=$vcd['zkCodeP']?></a></td>
+							</tr>-->
+						<?
+//						}
+					}
+					?>
+				</tbody>
+			</table>
+			<?
+			break;
+		case 30:
+			?>
+			<div id="dQuestions" class="al">
+				<?
+//				$rp=new Rpt($db);
+				$rAn=$rp->rptCpyWide(['idSv'=>$idSv,'uac'=>$uac]);
+				$ran=$rAn['ran'];
+				$rsl=$rAn['rsl'];
+				$tcd=$rAn['tcd'];
+				foreach($rsl as $k=> $v) {
+					$idSl=$v['zkSrvylineP'];
+					$aAn=array_keys(array_column($ran,'zkSrvylineP'),$idSl);
+					$ranSl=array_slice($ran,$aAn[0],count($aAn));
+					$ctSlAn=count(explode('|',$v['slAnswer']));
+					$ctAns=array_sum(array_column($ranSl,'ct'));
+					$pctf=array_sum(array_column(array_slice($ranSl,$aAn[0],floor(count($aAn) / 2)),'ct')) / $ctAns * 100;
+					$i++;
+					if(strlen($in=$v['slInstruction'])) {
+						?>
+						<div class="dI oa">
+							<div class="at fl">
+								<div>Respondent Instruction: </div>
+								<div class="slI"><b><?=$in?></b>
+								</div>
+							</div>
+							<?if(substr($an,0,6) == 'One of') {?>
+								<div class="slA fr">
+									<?
+									$j=0;
+									foreach($aA as $vA) {
+										?>
+										<div><i class="<?=$aAC[$j]?>"></i><?=$vA?></div>
+										<?
+										$j++;
+									}
+									?>
+								</div>
+							<? } // if one of?>
+						</div>
+					<? } // if instruction ?>
+					<div class="dQA">
+						<div class="ib" style="width:80%;">
+							<div class="dQ">#<?=$i?><?=$isDev?" ({$v['zkSrvylineP']})":''?>: <b><?=$v['slQuestion']?></b></div>
+							<div class="dBar ma ib w100">
+								<?
+								$ia=$ctSlAn - 1;
+								$idSl=$v['zkSrvylineP'];
+								$aBgc=$gb->getGradient(['hA'=>'0D2534','hB'=>'39B44A','s'=>$ctSlAn])['v'];
+								foreach($ranSl as $kb=> $vb) {
+									$pcta=($ctAn=$ran["$kb"]['ct']) / $ctAns;
+									?>
+									<span class="ib" data-ia="<?=$ia?>" style="width:<?=$pcta * 100?>%;background-color:<?=$aBgc[$ia - $kb]?>;"></span>
+								<? }?>
+								<div class="cb">
+									<?
+									$ia=$ctSlAn - 1;
+									foreach($ranSl as $kb=> $vb) {
+										$pcta=($ctAn=$ran["$kb"]['ct']) / $ctAns;
+										$sw=$ia - $kb > 0?'width:'.(100 / $ctSlAn).'%;':'';
+										?>
+										<div class="ib nw" style="<?=$sw?>" title="<?=$pcta?>"><i style="background-color:<?=$aBgc[$ia - $kb]?>;"></i><?=$pcta > 0?nf($pcta * 100):'0.00'?>% (<?=$vb['ct']?>)</div>
+									<? }?>
+								</div>
+							</div>
+						</div>
+						<div class="fr ab">
+							<div class="slA ar">
+								<div><?=$va=$ctAns?>/<?=$tcd?> <?if($isDev || $isRandy) {?><a href="rpt/a0/n4v/id<?=$v['zkSrvylineP']?>" class="aRspRpt"><? }?>Responses<?if($isDev || $isRandy) {?></a><? }?>: <?=nf(($va?:0) / $tcd * 100)?>%&nbsp;</div>
+								<div>Favorable: <span class="cE" title="<?=$pctf?>" style="background-color:<?=$aBgc[$ia]?>;">&nbsp;<?=nf($pctf)?>%&nbsp;</span></div>
+								<div>Overall: <span title="<?=$pcto=$aTbT[$idSl]['pcto']?>"><?=nf($pcto)?>%&nbsp;</span></div>
+							</div>
+						</div>
+					</div>
+					<?
+					break;
+				} // fe rsl
+				?>
+			</div>
+			<?
+			break;
+		default:
+			?>
+			<div class="al">
+				<?
+				$i=0;
+				foreach($ranA as $k=> &$v) {
+//					if(strpos($v['slCategory'],'!calc')=== false) {
+					$demo=$aDm[$v['zkAnCodeF']]?:'No Selection';
+					$pct=$aTbA[$v['zkSrvylineP']]["$demo"]['pct']+=$v['anPct'];
+					$aTbA[$v['zkSrvylineP']]["$demo"]['slOrderN']=$v['slOrderN'];
+					$ct=$aTbA[$v['zkSrvylineP']]["$demo"]['ct']++;
+					$ctf=$aTbA[$v['zkSrvylineP']]["$demo"]['ctf']+=$v['anPct'] > 50?1:0;
+//						$ctc=$aTbA[$v['zkSrvylineP']]["$demo"]['ct'] ++;
+//						$ctfc=$aTbA[$v['zkSrvylineP']]["$demo"]['ctf']+=$v['anPct'] > 50?1:0;
+//					}
+//					$aX[$v['zkAnCodeF']]='';
+				}
+//				ksort($aX);
+				foreach($aTbA as $k=> $v) {
+					foreach($v as $ka=> $va) {
+						// totals
+						$pct=$aTbT["$ka"]['pct']+=$va['pct'];
+						$ct=$aTbT["$ka"]['ct']+=$va['ct'];
+						$ctf=$aTbT["$ka"]['ctf']+=$va['ctf'];
+//						$ctc=$aTbT["$ka"]['ctc']+=$va['ctc'];
+//						$ctfc=$aTbT["$ka"]['ctfc']+=$va['ctfc'];
+						$aTbT["$ka"]['pctAll']=$pct / $ct;
+//						$aTbT["$ka"]['pctAll']=$pct / $ctc;
+//						$aTbT["$ka"]['pctAllF']=$ctf / $ct * 100;
+						// demo
+						$pct=$aTb[$k]["$ka"]['pct']+=$va['pct'];
+						$ct=$aTb[$k]["$ka"]['ct']+=$va['ct'];
+						$ctf=$aTb[$k]["$ka"]['ctf']+=$va['ctf'];
+//						$ct=$aTb[$k]["$ka"]['ctc']+=$va['ctc'];
+//						$ctf=$aTb[$k]["$ka"]['ctfc']+=$va['ctfc'];
+						$aTb[$k]["$ka"]['pctAll']=$pct / $ct;
+//						$aTb[$k]["$ka"]['pctAll']=$pct / $ctc;
+//						$aTb[$k]["$ka"]['pctAllF']=$ctf / $ct * 100;
+					}
+				}
+				array_walk($aTb,'ksort');
+				ksort($aTbT);
+				foreach($rsl as $k=> $v) {
+					if(!strpos(' '.$v['slCategory'],'score')) {
+						continue;
+					}
+					if(strpos($v['slCategory'],'!calc') === false) {
+						$tqc++;
+					}
+				}
+//				dbg($tqc);
+				?>
+				<div class="dQ"><b><?=$rptTitle?> (Summary)</b></div>
+				<table class="al dBar">
+					<?
+					$ia=0;
+					foreach($aTbT as $k=> $v) {
+						if(is_int($k)) {
+//							continue;
+						}
+						$ct=round($v['ct'] / $tqc,0);
+//						$ct=round($v['ctc'] / $tqc,0);
+						$pct=$pctf=$v['pctAllF']=$v['ctf'] / $v['ct'] * 100;
+//						$pct=$pctf=$v['pctAllF']=$v['ctfc'] / $v['ctc'] * 100;
+						$pctd=nf($pct);
+						$bc=$ct>= $srm?"background-color:{$aBgcH[(int)$pct - 1]}":'';
+						?>
+						<tr>
+							<td><?=$k?><?=$isDev?" (ctf: {$v['ctf']} / ct: {$v['ct']} = pctAllF: $pctd)":''?></td>
+							<td class="al" style="width:50%"><i class="cB nw" style="width:<?=$pct?>%;<?=$bc?>"><?=$ct>= $srm?'':'Not enough responses to report'?></i></td>
+							<td class="ar" style="width:50px;" title="<?=$ct>= $srm?$pct:''?>"><?=$ct>= $srm?($pctd.'%'):'-'?></td>
+						</tr>
+					<? } // fe rpy ?>
+				</table>
+				<div class="dI" style="margin:28px 0 0 0;"> </div>
+				<?
+				foreach($rsl as $k=> $v) {
+					if(!strpos(' '.$v['slCategory'],'score')) {
+						continue;
+					}
+					$i++;
+					?>
+					<div class="al dI" style="border:none;">#<?=$i?><?=$isDev?" ({$v['zkSrvylineP']})":''?>: <b><?=$v['slQuestion']?></b></div>
+					<table class="al dBar">
+						<?
+						foreach($aTb[$v['zkSrvylineP']] as $ka=> $va) {
+							$ct=$va['ct'];
+//							$ct=$va['ctc'];
+							$pct=$pctf=$va['pctAllF']=$va['ctf'] / $va['ct'] * 100;
+//							$pct=$pctf=$va['pctAllF']=$va['ctfc'] / $va['ctc'] * 100;
+							$pctd=nf($pct);
+							$bc=$ct>= $srm?"background-color:{$aBgcH[(int)$pct - 1]}":'';
+//							$bc=$ctc>= $srm?"background-color:{$aBgcH[(int)$pct - 1]}":'';
+							?>
+							<tr>
+								<td><?=$ka?><?=$isDev?" (ctf: {$va['ctf']} / ct: {$va['ct']} = pctAllF: $pctd)":''?></td>
+								<td class="al" style="width:50%"><i class="cB nw" style="width:<?=$pct?>%;<?=$bc?>"><?=$ct>= $srm?'':'Not enough responses to report'?></i></td>
+								<td class="ar" style="width:50px;" title="<?=$ct>= $srm?$pct:''?>"><?=$ct>= $srm?($pctd.'%'):'-'?></td>
+							</tr>
+						<? } // fe aBr ?>
+					</table>
+				<? } // fe rsl ?>
+
+
+				<?break;?>
+				<div class="dQ"><b><?=$rptTitle?> (Summary)</b></div>
+				<table class="al dBar">
+					<?foreach($aDm as $k=> $v) {?>
+						<tr>
+							<td><?=$v['dm']?></td>
+							<td class="al" style="width:50%"><i class="<?=$gb->barClass($pct=($v['pct'] / $tSl))?>" style="width:<?=$pct?>%;"></i></td>
+							<td class="ar" style="width:50px;"><?=nf($pct)?>%</td>
+						</tr>
+					<? } // fe rpy ?>
+				</table>
+				<?
+				foreach($rsl as $k=> $v) {
+					?>
+				</div>
+				<div class="al dI" style="border:none;"><b>Question #<?=$v['i']?>: </b><?=$v['slQuestion']?></div>
+				<table class="al dBar">
+					<?
+					$j=$pctSum=$pctAvg=$tPct=0;
+					foreach($v['aDm'] as $ka=> $va) {
+						if(!strlen(trim($va['dm']))) {
+							continue;
+						}
+						?>
+						<?if($id == 16 && $j == 0) {?>
+							<tr>
+								<td colspan="3"><b>Time Intended to Stay</b></td>
+							</tr>
+						<? } // if id=16 ?>
+						<tr>
+							<td><?=$va['dm']?></td>
+							<td class="al" style="width:50%"><i class="<?=$gb->barClass($pct=$v['aDm'][$ka]['pct'])?>" style="width:<?=$pct?>%;"></i></td>
+							<td class="ar" style="width:50px;"><?=nf($pct)?>%</td>
+						</tr>
+						<?
+						$pctSum+=$pct;
+						$tPct+=$pct;
+						$j++;
+					} // fe rpy
+					$pct=$pctSum / $j;
+					?>
+					<tr>
+						<td><b>Average</b></td>
+						<td class="al" style="width:50%"><!--i class="<?=($pct) > 90?$aAC[0]:($pct > 75?$aAC[1]:($pct > 59?$aAC[2]:$aAC[3]))?>" style="width:<?=$pct?>%;"></i--></td>
+						<td class="ar" style="width:50px;"><b><?=nf($tPct / $j)?>%</b></td>
+					</tr>
+				</table>
+			<? } // fe rsl ?>
+
+			<?
+			break;
+	} // switch id
+	?>
+
+</div>
+
+<div class="dn">
+	<div id="dPopImport" class="popup">
+		<div class="ni ns">
+			<div class="fr a dPopClose">x</div>
+			<h3>Import Translated Comments</h3>
+			<div id="dDrop" class="ib at">
+				<div id="dDropTitle" class="ac">Drop translation import file here</div>
+				<div class="message"></div>
+			</div>
+		</div>
+	</div>
+</div>
+<?
+dbg('z: '.(microtime(true) - $myTimeBegin))?>
